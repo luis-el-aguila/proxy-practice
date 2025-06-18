@@ -1,27 +1,42 @@
-//load the environment variables
-// require("dotenv").config();
 import dotenv from 'dotenv';
+import express from 'express';
+import { AddressInfo, Server } from 'net';
+import { ErrorRequestHandler } from 'express';
+
 dotenv.config();
 
-//imports of the app
-// const express = require("express");
-import express from 'express';
 const app = express();
 
-//middleware global , parse json
-// app.use(express.json());
+// Middleware global para parsear JSON
 app.use(express.json());
 
-//router import
-// const proxyRouter = require("./routes/proxy");
+// Importar y usar el router
 import proxyRouter from './routes/proxy';
-
-// use the router in the route /proxy
-// app.use("/proxy", proxyRouter);
 app.use("/proxy", proxyRouter);
+
+// Middleware de manejo de errores
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`servidor listening on port ${PORT}`);
+const server: Server = app.listen(PORT, () => {
+  const address = server.address() as AddressInfo;
+  if (!address) {
+    throw new Error('Failed to bind to address');
+  }
+  console.log(`Servidor escuchando en http://localhost:${address.port}`);
+});
+
+// Manejo de errores de proceso
+process.on('uncaughtException', (error: Error) => {
+  console.error('Error no capturado:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('Rechazo no manejado:', reason);
+  process.exit(1);
 });

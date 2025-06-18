@@ -1,14 +1,17 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response, NextFunction } from 'express';
 import { validateProxyToken } from '../middlewares/validateProxyToken';
 import { logRequest } from '../middlewares/logRequest';
 import { proxyPost } from '../controllers/proxyController';
 
-//create router
-const router = Router();
+const router: Router = Router();
 
-//applies the middleware only to this route
-// router.post("/", logRequest, validateProxyToken, proxyPost);
+// Manejo de errores para la ruta
+router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Error en ruta proxy:', err);
+  res.status(500).json({ error: 'Error en la ruta proxy' });
+});
+
+// Ruta principal
 router.post("/", logRequest, validateProxyToken, proxyPost);
 
-//export the route
 export default router;
